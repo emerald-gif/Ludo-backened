@@ -60,6 +60,9 @@ app.get('/match-options/:username', (req, res) => {
 });
 
 // ✅ Join Match Queue
+let matchQueue = [];
+let ongoingMatches = [];
+
 app.post('/join-match', (req, res) => {
   const { username, stake, players } = req.body;
 
@@ -67,37 +70,37 @@ app.post('/join-match', (req, res) => {
     return res.status(400).json({ message: 'Insufficient balance' });
   }
 
-  const match = matchOptions.find(m => m.stake === stake && m.players === players);
-  if (!match) return res.status(404).json({ message: 'Invalid match config' });
-
+  // Deduct stake immediately
   wallets[username] -= stake;
-  matchQueue.push({ username, stake, players });
 
-  const group = matchQueue.filter(m => m.stake === stake && m.players === players);
-  if (group.length === players) {
-    const participants = group.map(p => p.username);
-    const matchId = Date.now().toString();
+  const matchKey = `${players}-${stake}`;
+  let queue = matchQueue.find(q => q.key === matchKey);
 
-    matches.push({
-      id: matchId,
-      participants,
-      stake,
-      players,
-      prize: match.prize,
-      status: 'waiting'
-    });
-
-    matchQueue = matchQueue.filter(p => !participants.includes(p.username));
-
-    return res.json({
-      message: 'Match started',
-      matchId,
-      participants,
-      prize: match.prize
-    });
+  if (!queue) {
+    queue = { key: matchKey, players: [], stake, max: players };
+    matchQueue.push(queue);
   }
 
-  res.json({ message: 'Waiting for other players...' });
+  queue.players.push(username);
+
+  if (queue.players.length === queue.max) {
+    // All players ready → Create match
+    const prize = matchOptions.find(m => m.players === players && m.stake === stake)?.prize || 0;
+    const winner = queue.players[Math.floor(Math.random() * queue.players.length)];
+    wallets[winner] += prize;
+
+    ongoingMatches.push({
+      players: queue.players,
+      stake,
+      winner,
+      prize,
+      id: Date.now().toString() + "-" + Math.floor(Math.random()*1000)
+    });
+
+    matchQueue = matchQueue.filter(q => q.key !== matchKey);
+  }
+
+  res.json({ message: 'Joined match. Waiting for others...', matchKey });
 });
 
 // ✅ Declare Winner
@@ -124,6 +127,25 @@ app.post('/declare-winner', (req, res) => {
     prize: match.prize,
     newBalance: wallets[winner]
   });
+});
+
+app.get('/match-result/:username', (req, res) => {
+  const { username } = req.params;
+
+  const match = ongoingMatches.find(m => m.players.includes(username));
+  if (!match) {
+    return res.json({ status: 'waiting' });
+  }
+
+  res.json({
+    status: 'complete',
+    winner: match.winner,
+    prize: match.prize,
+    players: match.players
+  });
+
+  // Remove after sending result once
+  ongoingMatches = ongoingMatches.filter(m => !m.players.includes(username));
 });
 
 // ✅ Server Listen
