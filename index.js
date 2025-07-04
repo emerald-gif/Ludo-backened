@@ -60,7 +60,6 @@ app.get('/match-options/:username', (req, res) => {
 });
 
 // ✅ Join Match Queue
-let matchQueue = [];
 let ongoingMatches = [];
 
 app.post('/join-match', (req, res) => {
