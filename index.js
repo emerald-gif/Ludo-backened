@@ -12,15 +12,14 @@ let matches = [];
 
 // ✅ Match Options
 const matchOptions = [
-  { players: 2, stake: 30, prize: 50  },
-  { players: 2, stake: 50, prize: 85 },
-  { players: 2, stake: 100, prize: 160  },
-  { players: 2, stake: 300, prize: 480  },
-  { players: 2, stake: 500, prize: 800   },
-  { players: 2, stake: 1000, prize: 1700 },
-  { players: 2, stake: 2000, prize: 3200 },
-  { players: 2, stake: 5000, prize: 8000 }
-  
+  { players: 2, stake: 30, prize: 50, commission: 10 },     // 2×30 = 60 → 50 + 10
+  { players: 2, stake: 50, prize: 85, commission: 15 },     // 2×50 = 100 → 85 + 15
+  { players: 2, stake: 100, prize: 160, commission: 40 },   // 2×100 = 200 → 160 + 40
+  { players: 2, stake: 300, prize: 480, commission: 120 },  // 2×300 = 600 → 480 + 120
+  { players: 2, stake: 500, prize: 800, commission: 200 },  // 2×500 = 1000 → 800 + 200
+  { players: 2, stake: 1000, prize: 1700, commission: 300 },// 2×1000 = 2000 → 1700 + 300
+  { players: 2, stake: 2000, prize: 3200, commission: 800 },// 2×2000 = 4000 → 3200 + 800
+  { players: 2, stake: 5000, prize: 8000, commission: 2000 } // 2×5000 = 10000 → 8000 + 2000
 ];
 
 // ✅ Register
